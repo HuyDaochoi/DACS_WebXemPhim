@@ -1,0 +1,181 @@
+CREATE DATABASE IF NOT EXISTS WebXemPhim;
+USE WebXemPhim;
+
+-- Bảng Phim
+CREATE TABLE Phim (
+    MaPhim INT PRIMARY KEY AUTO_INCREMENT,
+    TenPhim VARCHAR(100) CHARACTER SET utf8mb4 NOT NULL,
+    TieuDe VARCHAR(255) CHARACTER SET utf8mb4,
+    MoTa TEXT CHARACTER SET utf8mb4,
+    NoiDung TEXT CHARACTER SET utf8mb4,
+    ThoiLuong INT,
+    NamPhatHanh INT,
+    DanhGia FLOAT DEFAULT 0,
+    LuotXem INT DEFAULT 0,
+    TinhTrang ENUM('Đang chiếu', 'Sắp chiếu', 'Đã kết thúc') DEFAULT 'Đang chiếu',
+    PhanLoai ENUM('Lẻ', 'Bộ') DEFAULT 'Lẻ',
+    HinhAnh VARCHAR(255) CHARACTER SET utf8mb4,
+    Link VARCHAR(255) CHARACTER SET utf8mb4,
+    NgayTao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    NgayCapNhat TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    MaQuocGia INT,
+    FOREIGN KEY (MaQuocGia) REFERENCES QuocGia(MaQuocGia) ON DELETE SET NULL
+);
+
+CREATE TABLE QuocGia (
+    MaQuocGia INT PRIMARY KEY AUTO_INCREMENT,
+    TenQuocGia VARCHAR(100) CHARACTER SET utf8mb4 NOT NULL UNIQUE
+    
+   
+);
+-- Bảng Thể Loại
+CREATE TABLE TheLoai (
+    MaTheLoai INT PRIMARY KEY AUTO_INCREMENT,
+    TenTheLoai VARCHAR(50) CHARACTER SET UTF8MB4
+   
+);
+
+-- Quan hệ nhiều-nhiều: Phim - Thể Loại
+CREATE TABLE Phim_TheLoai (
+    MaPhim INT,
+    MaTheLoai INT,
+    PRIMARY KEY (MaPhim, MaTheLoai),
+    FOREIGN KEY (MaPhim) REFERENCES Phim(MaPhim) ON DELETE CASCADE,
+    FOREIGN KEY (MaTheLoai) REFERENCES TheLoai(MaTheLoai) ON DELETE CASCADE
+);
+
+-- Bảng Diễn Viên
+CREATE TABLE DienVien (
+    MaDienVien INT PRIMARY KEY AUTO_INCREMENT,
+    TenDienVien VARCHAR(100) CHARACTER SET utf8mb4 NOT NULL,
+    NgaySinh DATE,
+    MaQuocGia INT,
+    TieuSu TEXT CHARACTER SET utf8mb4,
+    HinhAnh VARCHAR(255),
+    
+    FOREIGN KEY (MaQuocGia) REFERENCES QuocGia(MaQuocGia) ON DELETE SET NULL
+);
+
+-- Bảng Đạo Diễn
+CREATE TABLE DaoDien (
+    MaDaoDien INT PRIMARY KEY AUTO_INCREMENT,
+    TenDaoDien VARCHAR(100) CHARACTER SET utf8mb4 NOT NULL,
+    NgaySinh DATE,
+    MaQuocGia INT,
+    TieuSu TEXT CHARACTER SET utf8mb4,
+    HinhAnh VARCHAR(255),
+   
+    FOREIGN KEY (MaQuocGia) REFERENCES QuocGia(MaQuocGia) ON DELETE SET NULL
+);
+
+-- Quan hệ Phim - Diễn Viên
+CREATE TABLE Phim_DienVien (
+    MaPhim INT,
+    MaDienVien INT,
+    PRIMARY KEY (MaPhim, MaDienVien),
+    FOREIGN KEY (MaPhim) REFERENCES Phim(MaPhim) ON DELETE CASCADE,
+    FOREIGN KEY (MaDienVien) REFERENCES DienVien(MaDienVien) ON DELETE CASCADE
+);
+
+-- Quan hệ Phim - Đạo Diễn
+CREATE TABLE Phim_DaoDien (
+    MaPhim INT,
+    MaDaoDien INT,
+    PRIMARY KEY (MaPhim, MaDaoDien),
+    FOREIGN KEY (MaPhim) REFERENCES Phim(MaPhim) ON DELETE CASCADE,
+    FOREIGN KEY (MaDaoDien) REFERENCES DaoDien(MaDaoDien) ON DELETE CASCADE
+);
+
+-- Bảng Tài Khoản
+CREATE TABLE tai_khoan (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ten_dang_nhap VARCHAR(50) UNIQUE NOT NULL,
+    mat_khau VARCHAR(255) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    ho_ten VARCHAR(100) CHARACTER SET utf8mb4,
+    hinh_dai_dien VARCHAR(255),
+    vai_tro ENUM('user', 'admin', 'moderator') DEFAULT 'user',
+    trang_thai ENUM('active', 'inactive', 'banned') DEFAULT 'active',
+    ngay_tao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ngay_cap_nhat TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Bảng Lịch Sử Xem
+CREATE TABLE LichSu (
+    TenDN VARCHAR(50),
+    MaPhim INT,
+    ThoiGian DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (TenDN, MaPhim),
+    FOREIGN KEY (TenDN) REFERENCES tai_khoan(ten_dang_nhap) ON DELETE CASCADE,
+    FOREIGN KEY (MaPhim) REFERENCES Phim(MaPhim) ON DELETE CASCADE
+);
+
+-- Bảng Đánh Giá
+CREATE TABLE DanhGia (
+    TenDN VARCHAR(50),
+    MaPhim INT,
+    SoDiem INT,
+    BinhLuan TEXT CHARACTER SET utf8mb4,
+    ThoiGian DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (TenDN, MaPhim),
+    FOREIGN KEY (TenDN) REFERENCES tai_khoan(ten_dang_nhap) ON DELETE CASCADE,
+    FOREIGN KEY (MaPhim) REFERENCES Phim(MaPhim) ON DELETE CASCADE
+);
+
+-- Bảng Bình Luận
+CREATE TABLE BinhLuan (
+    MaBinhLuan INT AUTO_INCREMENT PRIMARY KEY,
+    TenDN VARCHAR(50),
+    MaPhim INT,
+    NoiDung TEXT CHARACTER SET utf8mb4,
+    ThoiGian DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (TenDN) REFERENCES tai_khoan(ten_dang_nhap) ON DELETE CASCADE,
+    FOREIGN KEY (MaPhim) REFERENCES Phim(MaPhim) ON DELETE CASCADE
+);
+
+-- Bảng Video
+CREATE TABLE Video (
+    MaVideo INT AUTO_INCREMENT PRIMARY KEY,
+    MaPhim INT,
+    TenVideo VARCHAR(100) CHARACTER SET utf8mb4,
+    ChatLuong VARCHAR(50) CHARACTER SET utf8mb4,
+    NgonNgu VARCHAR(50) CHARACTER SET utf8mb4,
+    Link TEXT,
+    FOREIGN KEY (MaPhim) REFERENCES Phim(MaPhim) ON DELETE CASCADE
+);
+
+-- Bảng Tập Phim (dành cho phim bộ)
+CREATE TABLE TapPhim (
+    MaTap INT AUTO_INCREMENT PRIMARY KEY,
+    MaPhim INT,
+    TenTap VARCHAR(50) CHARACTER SET utf8mb4,
+    Link VARCHAR(255),
+    FOREIGN KEY (MaPhim) REFERENCES Phim(MaPhim) ON DELETE CASCADE
+);
+-- Thêm dữ liệu cho bảng TheLoai
+INSERT INTO TheLoai (TenTheLoai) VALUES
+('Hành động' ),
+('Tình cảm'),
+('Hài hước');
+
+
+
+INSERT INTO QuocGia (TenQuocGia) VALUES
+('Việt Nam'),
+('Hoa Kỳ'),
+('Hàn Quốc'),
+('Nhật Bản'),
+('Trung Quốc'),
+('Pháp'),
+('Anh'),
+('Thái Lan');
+
+CREATE TABLE phim_yeuthich (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    MaPhim INT NOT NULL,
+    UserID INT NOT NULL,
+    NgayThem DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY (MaPhim, UserID),
+    FOREIGN KEY (MaPhim) REFERENCES Phim(MaPhim) ON DELETE CASCADE,
+    FOREIGN KEY (UserID) REFERENCES tai_khoan(id) ON DELETE CASCADE
+);
